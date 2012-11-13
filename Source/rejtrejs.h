@@ -20,8 +20,8 @@
 #include <fstream>
 #include <cstdlib>
 #include <algorithm>
-#include <omp.h>
 #include <ctime>
+#include <omp.h>
 
 #include "Vec.h"
 #include "Sphere.h"
