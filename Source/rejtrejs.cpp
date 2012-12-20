@@ -11,17 +11,17 @@ int main()
     memset(img,0,sizeof(img));
 
     #pragma omp parallel for schedule(dynamic, 1) 
-	for(int i = 0; i < imageWidth ; i++)
+	for (int i = 0; i < imageWidth ; i++)
     {
 		fprintf(stderr,"\rRendering image %dx%d (%d spp, AAx4) %5.2f%% with %d/%d threads.",
 			imageWidth,imageHeight,SAMPLES*4,100.*i/(imageWidth-1),
 			omp_get_num_threads(), omp_get_max_threads());
-        for(int j = 0; j < imageHeight; j++)
+        for (int j = 0; j < imageHeight; j++)
         {
 			double r = 0, g = 0, b = 0;
 
-			for(double fragmentx = i; fragmentx < i + 1; fragmentx += 0.5)
-			for(double fragmenty = j; fragmenty < j + 1; fragmenty += 0.5)
+			for (double fragmentx = i; fragmentx < i + 1; fragmentx += 0.5)
+			for (double fragmenty = j; fragmenty < j + 1; fragmenty += 0.5)
 			{
 				double x = (2 * ((fragmentx + 0.5) * invWidth) - 1) * angle * aspectratio;
 				double y = (1 - 2 * ((fragmenty + 0.5) * invHeight)) * angle;
@@ -61,9 +61,9 @@ int main()
 			g /= SAMPLES;
 			b /= SAMPLES;		
 
-			unsigned char red	=	(unsigned char)(255*r);
-            unsigned char green =   (unsigned char)(255*g);
-            unsigned char blue  =	(unsigned char)(255*b);
+			unsigned char red = (unsigned char)(255*r);
+            unsigned char green = (unsigned char)(255*g);
+            unsigned char blue = (unsigned char)(255*b);
 
             img[(i+j*imageWidth)*3+2] += red;
             img[(i+j*imageWidth)*3+1] += green;
@@ -81,7 +81,8 @@ int main()
 
 
 
-Color traceRay(Ray& rej, int& iterations, double coef){
+Color traceRay(Ray& rej, int& iterations, double coef)
+{
 	iterations++;
     if (coef < 0.0000001 || iterations >= MAXITERATIONS) return Color();
     double distanceToIntersect = MAXDISTANCE;
@@ -95,26 +96,26 @@ Color traceRay(Ray& rej, int& iterations, double coef){
     Objects* nearestObject;
 
     // Find if ray intersects and object in the scene
-    for(unsigned int i=0;i<scene.sceneObj.size();i++) 
+    for (unsigned int i=0;i<scene.sceneObj.size();i++) 
     {  
         Objects* currentObject = scene.sceneObj[i];
         bool hit = currentObject->intersectedBy(rej,distance);
         
 			// Hit a object 
-            if( hit && distance<distanceToIntersect)
+            if (hit && distance<distanceToIntersect)
             {
                 distanceToIntersect = distance;
                 color = currentObject->mat.getColor();
                 nearestObject = currentObject;
         
-                if(currentObject->mat.isLight())
+                if (currentObject->mat.isLight())
                 {
 					return color;
                 }
             }
     }  
  
-    if(distanceToIntersect >= MAXDISTANCE || distanceToIntersect < MINDISTANCE ) return Color();
+    if (distanceToIntersect >= MAXDISTANCE || distanceToIntersect < MINDISTANCE ) return Color();
 
     // get intersection point
     Vec intersectionPoint = rej.orig + rej.dir*distanceToIntersect;
@@ -124,11 +125,11 @@ Color traceRay(Ray& rej, int& iterations, double coef){
 	double reflection = nearestObject->mat.getReflection();
 	bool refraction = nearestObject->mat.getRefraction();		
 	// Branching
-	if(refraction || reflection > 0)
+	if (refraction || reflection > 0)
 	{
 		double refractCoef = 0;
 		double reflectCoef = 0;
-		if( refraction )
+		if ( refraction )
 		{
 			// Refracted branch
 			bool insideMedium;
@@ -138,6 +139,7 @@ Color traceRay(Ray& rej, int& iterations, double coef){
 				insideMedium = true;
 			}
 			else insideMedium = false;
+
 			double refInd = nearestObject->mat.getRefractionIndex();
 			Vec refDir = getRefractedVector(n,rej.dir,refAir,refInd,insideMedium);
 			Ray refRay(intersectionPoint,refDir);
@@ -199,9 +201,9 @@ Color traceRay(Ray& rej, int& iterations, double coef){
 
 
 	// Leaf
-    for(unsigned int l=0; l<scene.sceneObj.size(); l++) 
+    for (unsigned int l=0; l<scene.sceneObj.size(); l++) 
     {     
-        if(scene.sceneObj.at(l)->mat.isLight())
+        if (scene.sceneObj.at(l)->mat.isLight())
         {
             Sphere *light = (Sphere*)scene.sceneObj.at(l);    
             lightVec = light->GetRandomPoint() - intersectionPoint;
@@ -235,22 +237,22 @@ Color traceRay(Ray& rej, int& iterations, double coef){
     }//Avslut Object forloop 
 
 	return temppixel;
-}// Avslut trace ray
+}
 
 
 double getShade(const Ray& lightRay, double distance)
 {
 	double distanceToLight = distance;
 	double shade = 1.0;
-	for(unsigned int i=0;i<scene.sceneObj.size();i++) 
+	for (unsigned int i=0;i<scene.sceneObj.size();i++) 
 	{  	
-		if(scene.sceneObj.at(i)->mat.isLight()==false)
+		if (scene.sceneObj.at(i)->mat.isLight()==false)
 			{    
 				Objects* currentObject = scene.sceneObj[i];
 
 				bool hit = currentObject->intersectedBy(lightRay,distance);
 				// Hit a shadow object 
-				if(hit && distance < distanceToLight && currentObject->mat.getRefraction() == 0)
+				if (hit && distance < distanceToLight && currentObject->mat.getRefraction() == 0)
 				{
 					shade -=  min(shade,((distanceToLight-distance)/distanceToLight));
 					return shade;
@@ -264,7 +266,8 @@ double getShade(const Ray& lightRay, double distance)
 Vec getRefractedVector(const Vec& normal, const Vec& incident, double n1, double n2, bool insideMedium)
 {
 	double n = n1 / n2;
-	if( insideMedium ) n = 1.0 / n;
+	if ( insideMedium ) n = 1.0 / n;
+
 	const double cosI = -1.0*(normal * incident);
 	const double sinT2 = n * n * ( 1.0	- cosI * cosI );
 	if ( sinT2 > 1.0 ) return Vec();
@@ -274,18 +277,12 @@ Vec getRefractedVector(const Vec& normal, const Vec& incident, double n1, double
 
 double getReflectance(const	Vec& normal, const Vec& incident, double n1, double n2, bool insideMedium)
 {	
-	if( insideMedium ) 
-	{
-		double tmp = n2;
-		n2 = n1;
-		n1 = tmp;
-	}
 	double n = n1 / n2;
-
+	if ( insideMedium ) n = 1.0 / n;
 
 	const double cosI = -1.0*( normal * incident );
 	const double sinT2 = n * n * ( 1.0 - cosI * cosI );
-	if(sinT2 > 1.0) return 1.0;
+	if (sinT2 > 1.0) return 1.0;
 	const double cosT = sqrt(1.0 - sinT2);
 	const double r0rth = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
 	const double rPar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
@@ -321,7 +318,7 @@ void savebmp( const char *filename, int w, int h )
     fwrite(bmpfileheader,1,14,f);
     fwrite(bmpinfoheader,1,40,f);
 
-    for(i=0; i<h; i++)
+    for (i=0; i<h; i++)
     {
         fwrite(img+(w*(h-i-1)*3),3,w,f);
         fwrite(bmppad,1,(4-(w*3)%4)%4,f);
